@@ -25,14 +25,13 @@ public class ChatController {
     @GetMapping("/chat/{chatId}")
     public String showChat(@PathVariable Long chatId, ModelMap model) {
         model.addAttribute("chats", chatService.getAllChats());
-        model.addAttribute("chatId", chatService.getChat(chatId));
+        model.addAttribute("chat", chatService.getChat(chatId));
         return "chat";
     }
 
     @PostMapping("chat/new")
     public String newChat(@RequestParam String title) {
         Chat chat = chatService.createNewChat(title);
-
         return "redirect:/chat/" + chat.getId();
     }
 
@@ -41,4 +40,12 @@ public class ChatController {
         chatService.deleteChat(chatId);
         return "redirect:/";
     }
+
+//    @PostMapping("/chat/{chatId}/entry")
+    public String talkToModel(@PathVariable Long chatId,
+                              @RequestParam String prompt) {
+        chatService.proceedInteraction(chatId, prompt);
+        return "redirect:/chat/" + chatId;
+    }
+
 }
