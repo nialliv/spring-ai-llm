@@ -3,6 +3,7 @@ package ru.artemev.springaillm.services;
 import jakarta.transaction.Transactional;
 import lombok.SneakyThrows;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -34,14 +35,14 @@ public class ChatService {
         return chatRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
     }
 
-    public Chat getChat(Long chatId) {
-        return chatRepository.findById(chatId).orElseThrow();
-    }
-
     public Chat createNewChat(String title) {
         Chat chat = Chat.builder().title(title).build();
         chatRepository.save(chat);
         return chat;
+    }
+
+    public Chat getChat(Long chatId) {
+        return chatRepository.findById(chatId).orElseThrow();
     }
 
     public void deleteChat(Long chatId) {
@@ -61,18 +62,18 @@ public class ChatService {
         myProxy.addChatEntry(chatId, answer, ASSISTANT);
     }
 
-    public SseEmitter proceedInteractionWithStreaming(Long chatId, String prompt) {
-        myProxy.addChatEntry(chatId, prompt, USER);
 
-        StringBuilder answer = new StringBuilder();
-
+    public SseEmitter proceedInteractionWithStreaming(Long chatId, String userPrompt) {
         SseEmitter sseEmitter = new SseEmitter(0L);
+        final StringBuilder answer = new StringBuilder();
 
-        chatClient.prompt().user(prompt).stream()
+        chatClient
+                .prompt(userPrompt)
+                .advisors(advisorSpec -> advisorSpec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .stream()
                 .chatResponse()
                 .subscribe(response -> processToken(response, sseEmitter, answer),
-                        sseEmitter::completeWithError,
-                        () -> myProxy.addChatEntry(chatId, answer.toString(), ASSISTANT));
+                        sseEmitter::completeWithError);
 
         return sseEmitter;
     }

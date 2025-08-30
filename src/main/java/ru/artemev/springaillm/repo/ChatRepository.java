@@ -6,4 +6,5 @@ import ru.artemev.springaillm.model.Chat;
 
 @Repository
 public interface ChatRepository extends JpaRepository<Chat, Long> {
+
 }
