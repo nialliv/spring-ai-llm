@@ -7,6 +7,6 @@ import ru.artemev.springaillm.model.LoadedDocument;
 @Repository
 public interface DocumentRepository extends JpaRepository<LoadedDocument, Long> {
 
-    boolean existsByFileNameAndContentHash(String fileName, String contentHash);
+    boolean existsByFilenameAndContentHash(String fileName, String contentHash);
 
 }
